@@ -3,13 +3,13 @@
 import parsers.txt_parser  # noqa: F401  (necesario para que el decorator se registre)
 from core.registry import get_parser
 from core.models import UnitStatus
-from providers.mock_provider import MockProvider
+from providers.deepl_provider import DeepLProvider
 
 
 def translate_file(input_path: str, output_path: str, source_lang: str, target_lang: str):
     extension = input_path.rsplit(".", 1)[-1]
     parser = get_parser(extension)
-    provider = MockProvider()
+    provider = DeepLProvider()
 
     units = parser.parse(input_path)
     print(f"Se encontraron {len(units)} unidades traducibles.")
