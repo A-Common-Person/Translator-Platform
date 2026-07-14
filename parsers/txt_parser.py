@@ -9,7 +9,7 @@ from core.registry import register_parser
 class TxtParser(ContentParser):
     def parse(self, file_path: str) -> list[TranslatableUnit]:
         units = []
-        with open(file_path, "r", encoding="utf-8") as f:
+        with open(file_path, "r", encoding="utf-8-sig") as f:
             for i, line in enumerate(f):
                 stripped = line.rstrip("\n")
                 if stripped.strip() == "":
@@ -25,7 +25,7 @@ class TxtParser(ContentParser):
 
     def export(self, units: list[TranslatableUnit], original_path: str, output_path: str) -> None:
         units_by_line = {u.metadata["line_number"]: u for u in units}
-        with open(original_path, "r", encoding="utf-8") as f:
+        with open(original_path, "r", encoding="utf-8-sig") as f:
             original_lines = f.readlines()
 
         with open(output_path, "w", encoding="utf-8") as out:

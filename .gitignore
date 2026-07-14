@@ -3,3 +3,4 @@ __pycache__/
 *.pyc
 sample_translated.txt
 .env
+translation_memory.db
