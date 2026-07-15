@@ -1,5 +1,6 @@
 """Demo end-to-end: parsear un archivo, traducir con glosario + memoria, exportar el resultado."""
 
+import sys
 import parsers.txt_parser  # noqa: F401
 import parsers.epub_parser  # noqa: F401
 from core.registry import get_parser
@@ -34,4 +35,8 @@ def translate_file(input_path, output_path, source_lang, target_lang, glossary=N
 
 
 if __name__ == "__main__":
-    translate_file("sample.epub", "sample_translated.epub", source_lang="en", target_lang="es")
+    if len(sys.argv) < 5:
+        print("Uso: python main.py <archivo_entrada> <archivo_salida> <idioma_origen> <idioma_destino>")
+        sys.exit(1)
+
+    translate_file(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])

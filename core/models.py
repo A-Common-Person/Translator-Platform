@@ -35,5 +35,6 @@ class Project(BaseModel):
     name: str
     source_lang: str
     target_lang: str
+    original_path: str = ""
     units: list[TranslatableUnit] = Field(default_factory=list)
     
