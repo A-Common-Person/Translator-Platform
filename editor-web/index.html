@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Editor de traducción</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 0 20px;
+            background: #fafafa;
+        }
+
+        h1 {
+            font-size: 20px;
+        }
+
+        .unit {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+
+        .unit.approved {
+            border-left: 4px solid #4caf50;
+        }
+
+        .source {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        textarea {
+            width: 100%;
+            box-sizing: border-box;
+            font-size: 15px;
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            min-height: 50px;
+        }
+
+        button {
+            margin-top: 8px;
+            padding: 6px 14px;
+            cursor: pointer;
+        }
+
+        .status {
+            font-size: 12px;
+            color: #999;
+            margin-left: 8px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Editor de traducción</h1>
+    <div id="units"></div>
+
+    <script>
+        const API = "http://127.0.0.1:8000";
+
+        async function loadProject() {
+            const res = await fetch(`${API}/project`);
+            const project = await res.json();
+            renderUnits(project.units);
+        }
+
+        function renderUnits(units) {
+            const container = document.getElementById("units");
+            container.innerHTML = "";
+            units.forEach(unit => {
+                const div = document.createElement("div");
+                div.className = "unit" + (unit.status === "approved" ? " approved" : "");
+                div.innerHTML = `
+          <div class="source">${escapeHtml(unit.source_text)}</div>
+          <textarea id="text-${unit.id}">${escapeHtml(unit.translated_text || "")}</textarea>
+          <br>
+          <button onclick="approve('${unit.id}')">Aprobar</button>
+          <span class="status">${unit.status}</span>
+        `;
+                container.appendChild(div);
+            });
+        }
+
+        async function approve(unitId) {
+            const text = document.getElementById(`text-${unitId}`).value;
+            await fetch(`${API}/units/${unitId}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ translated_text: text }),
+            });
+            loadProject(); // recarga para reflejar el cambio guardado
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement("div");
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        loadProject();
+    </script>
+</body>
+
+</html>
