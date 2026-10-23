@@ -4,6 +4,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
+from core.paths import PROJECTS_DIR, OUTPUT_DIR
 from core.project_store import ProjectStore
 from core.models import UnitStatus
 from core.translation_memory import TranslationMemory
@@ -11,7 +12,7 @@ from core.registry import get_parser
 from parsers.txt_parser import TxtParser  # noqa: F401
 from parsers.epub_parser import EpubParser  # noqa: F401
 
-PROJECT_PATH = "proyecto.json"  # por ahora, fijo; más adelante será seleccionable
+PROJECT_PATH = (PROJECTS_DIR / "proyecto.json").as_posix()  # por ahora, fijo; más adelante será seleccionable
 
 app = FastAPI()
 
@@ -57,7 +58,7 @@ def export_project():
     extension = project.original_path.rsplit(".", 1)[-1]
     parser = get_parser(extension)
 
-    output_path = f"exported.{extension}"
+    output_path = (OUTPUT_DIR / f"exported.{extension}").as_posix()
     parser.export(project.units, project.original_path, output_path)
 
     return {"output_path": output_path}

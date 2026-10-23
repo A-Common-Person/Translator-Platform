@@ -3,11 +3,16 @@
 import sys
 import parsers.txt_parser  # noqa: F401
 import parsers.epub_parser  # noqa: F401
+from core.paths import PROJECTS_DIR, OUTPUT_DIR, in_folder
 from core.registry import get_parser
 from core.project_store import ProjectStore
 
 
 def export_project(project_path: str, output_path: str):
+    # Un nombre suelto se busca en projects/ y el resultado se guarda en output/
+    project_path = in_folder(PROJECTS_DIR, project_path)
+    output_path = in_folder(OUTPUT_DIR, output_path)
+
     project = ProjectStore.load(project_path)
     extension = project.original_path.rsplit(".", 1)[-1]
     parser = get_parser(extension)

@@ -2,9 +2,11 @@
 
 import sqlite3
 
+from core.paths import DATA_DIR
+
 
 class TranslationMemory:
-    def __init__(self, db_path: str = "translation_memory.db"):
+    def __init__(self, db_path: str = str(DATA_DIR / "translation_memory.db")):
         self.db_path = db_path
         self._init_db()
 

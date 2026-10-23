@@ -2,9 +2,6 @@ venv/
 __pycache__/
 *.pyc
 .env
-translation_memory.db
-proyecto.json
-exported.*
-sample_translated.txt
-sample_translated.epub
-sample_final.epub
+data/
+output/
+projects/

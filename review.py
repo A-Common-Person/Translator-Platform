@@ -1,12 +1,14 @@
 """Etapa 2: revisar y corregir traducciones antes de exportar."""
 
 import sys
+from core.paths import PROJECTS_DIR, in_folder
 from core.project_store import ProjectStore
 from core.models import UnitStatus
 from core.translation_memory import TranslationMemory
 
 
 def review(project_path: str):
+    project_path = in_folder(PROJECTS_DIR, project_path)
     project = ProjectStore.load(project_path)
     memory = TranslationMemory()
 

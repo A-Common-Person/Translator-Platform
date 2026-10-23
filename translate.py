@@ -3,6 +3,7 @@
 import sys
 import parsers.txt_parser  # noqa: F401
 import parsers.epub_parser  # noqa: F401
+from core.paths import SAMPLES_DIR, PROJECTS_DIR, in_folder
 from core.registry import get_parser
 from core.models import Project, UnitStatus
 from core.translation_memory import TranslationMemory
@@ -11,6 +12,10 @@ from providers.deepl_provider import DeepLProvider
 
 
 def translate_file(input_path, project_path, source_lang, target_lang, glossary=None):
+    # Un nombre suelto se busca en samples/ y el proyecto se guarda en projects/
+    input_path = in_folder(SAMPLES_DIR, input_path)
+    project_path = in_folder(PROJECTS_DIR, project_path)
+
     extension = input_path.rsplit(".", 1)[-1]
     parser = get_parser(extension)
     provider = DeepLProvider()
