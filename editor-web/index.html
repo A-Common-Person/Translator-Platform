@@ -17,6 +17,22 @@
             font-size: 20px;
         }
 
+        .toolbar {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 16px;
+            padding: 12px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+
+        .progress {
+            font-size: 14px;
+            color: #444;
+        }
+
         .unit {
             background: white;
             border: 1px solid #ddd;
@@ -46,7 +62,6 @@
         }
 
         button {
-            margin-top: 8px;
             padding: 6px 14px;
             cursor: pointer;
         }
@@ -56,26 +71,54 @@
             color: #999;
             margin-left: 8px;
         }
+
+        #export-msg {
+            font-size: 13px;
+            color: #4caf50;
+        }
+
+        label {
+            font-size: 14px;
+        }
     </style>
 </head>
 
 <body>
     <h1>Editor de traducción</h1>
+
+    <div class="toolbar">
+        <span class="progress" id="progress">Cargando...</span>
+        <label><input type="checkbox" id="only-pending" onchange="renderUnits()"> Mostrar solo pendientes</label>
+        <button onclick="doExport()">Exportar archivo final</button>
+        <span id="export-msg"></span>
+    </div>
+
     <div id="units"></div>
 
     <script>
         const API = "http://127.0.0.1:8000";
+        let allUnits = [];
 
         async function loadProject() {
             const res = await fetch(`${API}/project`);
             const project = await res.json();
-            renderUnits(project.units);
+            allUnits = project.units;
+            renderUnits();
         }
 
-        function renderUnits(units) {
+        function renderUnits() {
+            const onlyPending = document.getElementById("only-pending").checked;
+            const approvedCount = allUnits.filter(u => u.status === "approved").length;
+            document.getElementById("progress").textContent =
+                `${approvedCount} / ${allUnits.length} unidades aprobadas`;
+
+            const unitsToShow = onlyPending
+                ? allUnits.filter(u => u.status !== "approved")
+                : allUnits;
+
             const container = document.getElementById("units");
             container.innerHTML = "";
-            units.forEach(unit => {
+            unitsToShow.forEach(unit => {
                 const div = document.createElement("div");
                 div.className = "unit" + (unit.status === "approved" ? " approved" : "");
                 div.innerHTML = `
@@ -91,12 +134,23 @@
 
         async function approve(unitId) {
             const text = document.getElementById(`text-${unitId}`).value;
-            await fetch(`${API}/units/${unitId}`, {
+            const res = await fetch(`${API}/units/${unitId}`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ translated_text: text }),
             });
-            loadProject(); // recarga para reflejar el cambio guardado
+            const updated = await res.json();
+
+            // Actualiza solo esta unidad en memoria, sin recargar todo el proyecto
+            const index = allUnits.findIndex(u => u.id === unitId);
+            allUnits[index] = updated;
+            renderUnits();
+        }
+
+        async function doExport() {
+            const res = await fetch(`${API}/export`, { method: "POST" });
+            const data = await res.json();
+            document.getElementById("export-msg").textContent = `Exportado a: ${data.output_path}`;
         }
 
         function escapeHtml(text) {

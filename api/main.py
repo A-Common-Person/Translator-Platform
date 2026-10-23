@@ -7,6 +7,9 @@ from pydantic import BaseModel
 from core.project_store import ProjectStore
 from core.models import UnitStatus
 from core.translation_memory import TranslationMemory
+from core.registry import get_parser
+from parsers.txt_parser import TxtParser  # noqa: F401
+from parsers.epub_parser import EpubParser  # noqa: F401
 
 PROJECT_PATH = "proyecto.json"  # por ahora, fijo; más adelante será seleccionable
 
@@ -46,3 +49,15 @@ def update_unit(unit_id: str, update: UnitUpdate):
 
     ProjectStore.save(project, PROJECT_PATH)
     return unit.model_dump()
+
+
+@app.post("/export")
+def export_project():
+    project = ProjectStore.load(PROJECT_PATH)
+    extension = project.original_path.rsplit(".", 1)[-1]
+    parser = get_parser(extension)
+
+    output_path = f"exported.{extension}"
+    parser.export(project.units, project.original_path, output_path)
+
+    return {"output_path": output_path}
