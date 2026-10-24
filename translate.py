@@ -1,51 +1,8 @@
-"""Etapa 1: parsear un archivo y traducir todas sus unidades, guardando el proyecto para revisión."""
+"""Etapa 1 desde la terminal: traducir un archivo y guardar el proyecto para revisión."""
 
 import sys
-import parsers.txt_parser  # noqa: F401
-import parsers.epub_parser  # noqa: F401
-from core.paths import SAMPLES_DIR, PROJECTS_DIR, in_folder
-from core.registry import get_parser
-from core.models import Project, UnitStatus
-from core.translation_memory import TranslationMemory
-from core.project_store import ProjectStore
-from providers.deepl_provider import DeepLProvider
 
-
-def translate_file(input_path, project_path, source_lang, target_lang, glossary=None):
-    # Un nombre suelto se busca en samples/ y el proyecto se guarda en projects/
-    input_path = in_folder(SAMPLES_DIR, input_path)
-    project_path = in_folder(PROJECTS_DIR, project_path)
-
-    extension = input_path.rsplit(".", 1)[-1]
-    parser = get_parser(extension)
-    provider = DeepLProvider()
-    memory = TranslationMemory()
-
-    units = parser.parse(input_path)
-    print(f"Se encontraron {len(units)} unidades traducibles.")
-
-    for unit in units:
-        cached = memory.lookup(unit.source_text, source_lang, target_lang)
-        if cached:
-            unit.translated_text = cached
-        else:
-            unit.translated_text = provider.translate(
-                unit.source_text, source_lang, target_lang, context=unit.context, glossary=glossary
-            )
-            memory.store(unit.source_text, unit.translated_text, source_lang, target_lang)
-        unit.status = UnitStatus.MACHINE_TRANSLATED
-
-    project = Project(
-        id="demo-project",
-        name=input_path,
-        source_lang=source_lang,
-        target_lang=target_lang,
-        original_path=input_path,
-        units=units,
-    )
-    ProjectStore.save(project, project_path)
-    print(f"Proyecto guardado en: {project_path} (listo para revisar)")
-
+from core.pipeline import translate_file
 
 if __name__ == "__main__":
     if len(sys.argv) < 5:

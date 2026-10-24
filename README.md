@@ -51,7 +51,7 @@ cd Translator-Platform
 python -m venv venv
 venv\Scripts\Activate.ps1
 
-pip install pydantic deepl python-dotenv ebooklib beautifulsoup4 fastapi "uvicorn[standard]"
+pip install pydantic deepl python-dotenv ebooklib beautifulsoup4 fastapi "uvicorn[standard]" python-multipart
 ```
 
 > En Windows usa `python` y no `python3`: este último puede apuntar al lanzador de Microsoft Store en lugar de tu entorno virtual.
@@ -74,6 +74,10 @@ Si pasas solo un nombre de archivo, cada script lo busca o lo guarda en la carpe
 
 ### 1. Traducir
 
+Desde el editor: abre la pestaña **Inicio**, elige el archivo con **Elegir archivo…**, ajusta los idiomas y pulsa **Traducir**. Verás el avance y, al terminar, el proyecto se abre en el editor. Los archivos que subes se guardan en `data/uploads/`.
+
+O desde la terminal:
+
 ```powershell
 python translate.py <archivo_entrada> <proyecto.json> <idioma_origen> <idioma_destino>
 
@@ -90,7 +94,7 @@ Con el editor web (recomendado). El editor lista todos los proyectos de `project
 uvicorn api.main:app
 ```
 
-Después abre `editor-web/index.html` en tu navegador (doble clic o `start editor-web\index.html`). Desde ahí puedes cambiar de proyecto, corregir y aprobar unidades, filtrar las pendientes y exportar el archivo final a `output/<proyecto>_translated.<extensión>`. Una corrección solo se guarda al aprobarla: pulsa **Aprobar** o **Enter** dentro del cuadro de traducción (aprueba y pasa a la siguiente unidad; **Shift + Enter** inserta un salto de línea).
+Después abre `editor-web/index.html` en tu navegador (doble clic o `start editor-web\index.html`). Desde ahí puedes cambiar de proyecto, corregir y aprobar unidades (una por una o todas a la vez con **Aprobar todo**, que pide confirmación), filtrar las pendientes y exportar el archivo final a `output/<proyecto>_translated.<extensión>`. Una corrección solo se guarda al aprobarla: pulsa **Aprobar** o **Enter** dentro del cuadro de traducción (aprueba y pasa a la siguiente unidad; **Shift + Enter** inserta un salto de línea).
 
 > Para desarrollar con reinicio automático puedes usar `--reload`, pero conviene limitarlo a tus carpetas de código para que no vigile `venv/`:
 > `uvicorn api.main:app --reload --reload-dir api --reload-dir core --reload-dir parsers --reload-dir providers`
@@ -112,7 +116,7 @@ python export_project.py proyecto.json libro_traducido.epub
 
 ```
 Translator-Platform/
-├── core/              # modelos, interfaces, registro, glosario, memoria, rutas
+├── core/              # modelos, interfaces, registro, glosario, memoria, rutas, pipeline
 ├── parsers/           # txt_parser.py, epub_parser.py
 ├── providers/         # deepl_provider.py, mock_provider.py
 ├── api/               # backend local (FastAPI)
@@ -129,12 +133,13 @@ Estas carpetas se generan en tu máquina y **no se suben al repositorio**:
 
 - `projects/`: proyectos de revisión (`.json`)
 - `output/`: archivos traducidos y exportados
-- `data/`: memoria de traducción (`translation_memory.db`)
+- `data/`: memoria de traducción (`translation_memory.db`) y archivos subidos desde el editor (`uploads/`)
 
 ## Limitaciones conocidas
 
 - **EPUB**: la tabla de contenidos no se reconstruye al exportar (workaround temporal por un error de `ebooklib`). Solo se traducen párrafos y encabezados (`<p>`, `<h1>`–`<h3>`); el formato en línea dentro de un párrafo (por ejemplo, una palabra en cursiva) se pierde, y el texto que está en otras etiquetas (como el aviso legal de Project Gutenberg, que vive en un `<footer>`) se deja tal cual venía en el original.
 - Si abres `index.html` con la extensión Live Server de VS Code, la página se recarga al exportar (porque se crea un archivo nuevo). El editor recuerda el proyecto activo, pero el mensaje de exportación se pierde; abre el archivo con doble clic o agrega `output/**`, `projects/**` y `data/**` a `liveServer.settings.ignoreFiles`.
+- Los trabajos de traducción en curso viven en la memoria del servidor: si lo apagas mientras traduce, hay que empezar de nuevo.
 - Las ediciones sin aprobar se conservan mientras la página siga abierta, pero se pierden si la recargas (`F5`) o la cierras.
 - La memoria de traducción guarda las traducciones automáticas al generarlas; a futuro solo guardará las aprobadas.
 
@@ -147,6 +152,8 @@ Estas carpetas se generan en tu máquina y **no se suben al repositorio**:
 - [x] Editor web básico (progreso, filtro de pendientes, exportar desde la página)
 - [x] Carpetas de trabajo separadas (`samples/`, `output/`, `projects/`, `data/`)
 - [x] Selector de proyectos en el editor
+- [x] Pestaña de Inicio: elegir archivo e idiomas y traducir desde la interfaz
+- [x] Aprobar todo, con confirmación
 - [x] Pulido de la interfaz del editor (dos columnas, borradores, Enter para aprobar)
 - [ ] Parsers de diálogos de videojuegos (JSON, CSV, XLIFF, Ren'Py)
 - [ ] Soporte de RPG Maker (`.rvdata2`)

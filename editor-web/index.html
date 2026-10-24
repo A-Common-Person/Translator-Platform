@@ -4,10 +4,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Editor de traducción</title>
+    <title>Translator Platform</title>
     <style>
         * {
             box-sizing: border-box;
+        }
+
+        [hidden] {
+            display: none !important;
         }
 
         body {
@@ -21,10 +25,158 @@
 
         h1 {
             font-size: 22px;
+            margin: 0 0 12px;
+        }
+
+        h2 {
+            font-size: 17px;
             margin: 0 0 16px;
         }
 
-        /* Barra superior fija */
+        /* Pestañas principales */
+        .tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 24px;
+            border-bottom: 2px solid #dcdfe4;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            font-size: 15px;
+            border: none;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+            background: none;
+            color: #666;
+            border-radius: 0;
+        }
+
+        .tab:hover {
+            background: #eceef1;
+        }
+
+        .tab.active {
+            color: #1a56c4;
+            border-bottom-color: #1a56c4;
+            font-weight: 600;
+        }
+
+        /* Tarjetas del inicio */
+        .card {
+            background: white;
+            border: 1px solid #dcdfe4;
+            border-radius: 10px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .type-cards {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .type-card {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 2px;
+            min-width: 170px;
+            padding: 12px 16px;
+            text-align: left;
+            font-size: 15px;
+        }
+
+        .type-card small {
+            color: #888;
+            font-size: 12px;
+        }
+
+        .type-card.selected {
+            border-color: #1a56c4;
+            background: #e8f0fe;
+        }
+
+        .type-card:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+        }
+
+        .file-row,
+        .lang-row {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+
+        .lang-row {
+            margin: 16px 0 20px;
+        }
+
+        .field-block {
+            margin-bottom: 16px;
+        }
+
+        button.big {
+            padding: 10px 28px;
+            font-size: 15px;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        #translate-progress {
+            margin-top: 16px;
+        }
+
+        #translate-progress progress,
+        .project-info progress {
+            display: block;
+            width: 100%;
+            max-width: 420px;
+        }
+
+        .error {
+            margin-top: 12px;
+            padding: 10px 14px;
+            background: #fdecea;
+            color: #b3261e;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .project-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 14px 0;
+            border-top: 1px solid #eceef1;
+        }
+
+        .project-row:first-child {
+            border-top: none;
+        }
+
+        .project-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            flex: 1;
+        }
+
+        .empty {
+            color: #888;
+            font-size: 14px;
+        }
+
+        /* Barra superior fija del editor */
         .toolbar {
             position: sticky;
             top: 0;
@@ -68,7 +220,7 @@
             padding: 4px 8px;
         }
 
-        #export-msg {
+        #action-msg {
             font-size: 13px;
             color: #2e7d32;
         }
@@ -181,7 +333,7 @@
             cursor: pointer;
         }
 
-        button:hover {
+        button:hover:not(:disabled) {
             background: #f0f2f4;
         }
 
@@ -191,7 +343,7 @@
             color: white;
         }
 
-        button.primary:hover {
+        button.primary:hover:not(:disabled) {
             background: #276a2b;
         }
 
@@ -209,26 +361,89 @@
 </head>
 
 <body>
-    <h1>Editor de traducción</h1>
+    <h1>Translator Platform</h1>
 
-    <div class="toolbar">
-        <label>Proyecto:
-            <select id="project-select" onchange="selectProject(this.value)"></select>
-        </label>
-        <div class="progress-wrap">
-            <span class="progress" id="progress">Cargando...</span>
-            <progress id="bar" value="0" max="1"></progress>
+    <nav class="tabs">
+        <button class="tab active" id="tab-home" onclick="goHome()">Inicio</button>
+        <button class="tab" id="tab-editor" onclick="goEditor()">Editor</button>
+    </nav>
+
+    <!-- ===================== INICIO ===================== -->
+    <section id="view-home">
+        <div class="error" id="server-status" hidden></div>
+
+        <div class="card">
+            <h2>Nueva traducción</h2>
+
+            <div class="field-block">
+                <div class="field-label">¿Qué quieres traducir?</div>
+                <div class="type-cards">
+                    <button type="button" class="type-card selected">Libros y texto<small>TXT, EPUB</small></button>
+                    <button type="button" class="type-card" disabled>Videojuegos<small>Próximamente</small></button>
+                    <button type="button" class="type-card" disabled>Manga / manhwa<small>Próximamente</small></button>
+                </div>
+            </div>
+
+            <div class="field-block">
+                <div class="field-label">Archivo</div>
+                <div class="file-row">
+                    <button type="button" onclick="document.getElementById('file-input').click()">Elegir archivo…</button>
+                    <span id="file-name" class="hint">Ningún archivo seleccionado</span>
+                    <input type="file" id="file-input" hidden onchange="onFileChosen(this)">
+                </div>
+                <div class="hint" id="formats-hint"></div>
+            </div>
+
+            <div class="field-block">
+                <div class="field-label">Idiomas</div>
+                <div class="lang-row">
+                    <label>De <select id="source-lang"></select></label>
+                    <button type="button" onclick="swapLangs()" title="Intercambiar idiomas">⇄</button>
+                    <label>A <select id="target-lang"></select></label>
+                </div>
+            </div>
+
+            <button class="primary big" id="translate-btn" onclick="startTranslation()" disabled>Traducir</button>
+
+            <div id="translate-progress" hidden>
+                <div class="hint" id="translate-text"></div>
+                <progress id="translate-bar"></progress>
+            </div>
+            <div class="error" id="translate-error" hidden></div>
         </div>
-        <label><input type="checkbox" id="only-pending" onchange="renderUnits()"> Mostrar solo pendientes</label>
-        <button class="primary" onclick="doExport()">Exportar archivo final</button>
-        <span id="export-msg"></span>
-        <span class="hint">Enter: aprobar y pasar a la siguiente · Shift+Enter: salto de línea</span>
-    </div>
 
-    <div id="units"></div>
+        <div class="card">
+            <h2>Proyectos</h2>
+            <div id="project-list"></div>
+        </div>
+    </section>
+
+    <!-- ===================== EDITOR ===================== -->
+    <section id="view-editor" hidden>
+        <div class="toolbar">
+            <label>Proyecto:
+                <select id="project-select" onchange="openEditor(this.value)"></select>
+            </label>
+            <div class="progress-wrap">
+                <span class="progress" id="progress">Cargando...</span>
+                <progress id="bar" value="0" max="1"></progress>
+            </div>
+            <label><input type="checkbox" id="only-pending" onchange="renderUnits()"> Mostrar solo pendientes</label>
+            <button onclick="approveAll()">Aprobar todo</button>
+            <button class="primary" onclick="doExport()">Exportar archivo final</button>
+            <span id="action-msg"></span>
+            <span class="hint">Enter: aprobar y pasar a la siguiente · Shift+Enter: salto de línea</span>
+        </div>
+
+        <div id="units"></div>
+    </section>
 
     <script>
         const API = "http://127.0.0.1:8000";
+        const LANGUAGES = [
+            ["es", "Español"], ["en", "Inglés"], ["fr", "Francés"], ["de", "Alemán"],
+            ["it", "Italiano"], ["pt", "Portugués"], ["ja", "Japonés"], ["ko", "Coreano"],
+        ];
         const STATUS_LABELS = {
             pending: "Pendiente",
             machine_translated: "Traducción automática",
@@ -238,49 +453,233 @@
 
         let allUnits = [];
         let currentProject = null;
+        let projectsCache = [];
+        let translating = false;
         const drafts = {}; // ediciones sin aprobar, por proyecto y unidad
 
         function draftKey(unitId) {
             return `${currentProject}:${unitId}`;
         }
 
-        async function loadProjects() {
-            const select = document.getElementById("project-select");
-            let projects;
+        /* ---------------- Pestañas ---------------- */
+
+        function showTab(tab) {
+            document.getElementById("view-home").hidden = tab !== "home";
+            document.getElementById("view-editor").hidden = tab !== "editor";
+            document.getElementById("tab-home").classList.toggle("active", tab === "home");
+            document.getElementById("tab-editor").classList.toggle("active", tab === "editor");
+        }
+
+        async function goHome() {
+            showTab("home");
+            location.hash = "inicio";
+            await refreshHome(); // actualiza los avances de cada proyecto
+        }
+
+        async function goEditor() {
+            if (currentProject) {
+                showTab("editor");
+                location.hash = "editor/" + encodeURIComponent(currentProject);
+                return;
+            }
+            await fetchProjects();
+            if (projectsCache.length > 0) {
+                await openEditor(projectsCache[0].name);
+            } else {
+                showTab("editor");
+                document.getElementById("progress").textContent = "No hay proyectos. Crea uno desde Inicio.";
+            }
+        }
+
+        /* ---------------- Inicio ---------------- */
+
+        function fillLanguages() {
+            for (const id of ["source-lang", "target-lang"]) {
+                const select = document.getElementById(id);
+                LANGUAGES.forEach(([code, label]) => {
+                    const option = document.createElement("option");
+                    option.value = code;
+                    option.textContent = label;
+                    select.appendChild(option);
+                });
+            }
+            document.getElementById("source-lang").value = "en";
+            document.getElementById("target-lang").value = "es";
+        }
+
+        function swapLangs() {
+            const source = document.getElementById("source-lang");
+            const target = document.getElementById("target-lang");
+            [source.value, target.value] = [target.value, source.value];
+        }
+
+        async function loadFormats() {
+            try {
+                const res = await fetch(`${API}/formats`);
+                const formats = await res.json();
+                const list = formats.map(f => "." + f);
+                document.getElementById("file-input").accept = list.join(",");
+                document.getElementById("formats-hint").textContent = "Formatos disponibles: " + list.join(", ");
+            } catch (e) { /* si el servidor está apagado, refreshHome lo avisa */ }
+        }
+
+        function onFileChosen(input) {
+            const file = input.files[0];
+            document.getElementById("file-name").textContent = file ? file.name : "Ningún archivo seleccionado";
+            document.getElementById("translate-btn").disabled = !file || translating;
+            document.getElementById("translate-error").hidden = true;
+        }
+
+        async function fetchProjects() {
             try {
                 const res = await fetch(`${API}/projects`);
-                projects = await res.json();
+                projectsCache = await res.json();
+                return true;
             } catch (e) {
-                document.getElementById("progress").textContent =
-                    "No se pudo conectar con el servidor. ¿Está encendido uvicorn?";
+                projectsCache = [];
+                return false;
+            }
+        }
+
+        async function refreshHome() {
+            const ok = await fetchProjects();
+            const status = document.getElementById("server-status");
+            status.hidden = ok;
+            if (!ok) status.textContent = "No se pudo conectar con el servidor. ¿Está encendido uvicorn?";
+            renderProjectList();
+        }
+
+        function renderProjectList() {
+            const list = document.getElementById("project-list");
+            list.innerHTML = "";
+            if (projectsCache.length === 0) {
+                list.innerHTML = '<div class="empty">Todavía no hay proyectos. Elige un archivo arriba para crear el primero.</div>';
+                return;
+            }
+            projectsCache.forEach(p => {
+                const row = document.createElement("div");
+                row.className = "project-row";
+                row.innerHTML = `
+                    <div class="project-info">
+                        <strong>${escapeHtml(p.name)}</strong>
+                        <span class="hint">${p.approved} / ${p.total} unidades aprobadas</span>
+                        <progress value="${p.approved}" max="${Math.max(p.total, 1)}"></progress>
+                    </div>
+                    <button type="button">Abrir</button>
+                `;
+                row.querySelector("button").onclick = () => openEditor(p.name);
+                list.appendChild(row);
+            });
+        }
+
+        function setTranslating(value) {
+            translating = value;
+            const hasFile = document.getElementById("file-input").files.length > 0;
+            document.getElementById("translate-btn").disabled = value || !hasFile;
+        }
+
+        function showTranslateError(message) {
+            const box = document.getElementById("translate-error");
+            box.textContent = message;
+            box.hidden = false;
+            document.getElementById("translate-progress").hidden = true;
+        }
+
+        async function startTranslation() {
+            const file = document.getElementById("file-input").files[0];
+            if (!file) return;
+
+            const source = document.getElementById("source-lang").value;
+            const target = document.getElementById("target-lang").value;
+            if (source === target) {
+                showTranslateError("El idioma de origen y el de destino son el mismo.");
                 return;
             }
 
+            const form = new FormData();
+            form.append("file", file);
+            form.append("source_lang", source);
+            form.append("target_lang", target);
+
+            document.getElementById("translate-error").hidden = true;
+            setTranslating(true);
+            document.getElementById("translate-progress").hidden = false;
+            document.getElementById("translate-text").textContent = "Preparando…";
+            document.getElementById("translate-bar").removeAttribute("value");
+
+            try {
+                const res = await fetch(`${API}/translate`, { method: "POST", body: form });
+                if (!res.ok) {
+                    const err = await res.json();
+                    showTranslateError(err.detail || "No se pudo iniciar la traducción.");
+                    setTranslating(false);
+                    return;
+                }
+                const { job_id, project } = await res.json();
+                pollJob(job_id, project);
+            } catch (e) {
+                showTranslateError("No se pudo conectar con el servidor. ¿Está encendido uvicorn?");
+                setTranslating(false);
+            }
+        }
+
+        async function pollJob(jobId, project) {
+            let job;
+            try {
+                const res = await fetch(`${API}/jobs/${jobId}`);
+                job = await res.json();
+            } catch (e) {
+                showTranslateError("Se perdió la conexión con el servidor.");
+                setTranslating(false);
+                return;
+            }
+
+            const bar = document.getElementById("translate-bar");
+            if (job.total > 0) {
+                bar.max = job.total;
+                bar.value = job.done;
+                document.getElementById("translate-text").textContent =
+                    `Traduciendo… ${job.done} / ${job.total} unidades`;
+            }
+
+            if (job.status === "running") {
+                setTimeout(() => pollJob(jobId, project), 1000);
+            } else if (job.status === "error") {
+                showTranslateError("La traducción falló: " + job.error);
+                setTranslating(false);
+            } else {
+                // Terminó: limpia el formulario y abre el proyecto en el editor
+                setTranslating(false);
+                document.getElementById("translate-progress").hidden = true;
+                document.getElementById("file-input").value = "";
+                onFileChosen(document.getElementById("file-input"));
+                await fetchProjects();
+                renderProjectList();
+                await openEditor(project);
+            }
+        }
+
+        /* ---------------- Editor ---------------- */
+
+        function populateSelect() {
+            const select = document.getElementById("project-select");
             select.innerHTML = "";
-            if (projects.length === 0) {
-                document.getElementById("progress").textContent =
-                    "No hay proyectos. Crea uno con translate.py";
-                return;
-            }
-
-            projects.forEach(p => {
+            projectsCache.forEach(p => {
                 const option = document.createElement("option");
                 option.value = p.name;
                 option.textContent = p.name;
                 select.appendChild(option);
             });
-
-            // Si la URL trae #nombre, vuelve a ese proyecto; si no, abre el primero
-            const wanted = decodeURIComponent(location.hash.slice(1));
-            currentProject = projects.some(p => p.name === wanted) ? wanted : projects[0].name;
             select.value = currentProject;
-            await loadProject();
         }
 
-        async function selectProject(name) {
+        async function openEditor(name) {
             currentProject = name;
-            location.hash = encodeURIComponent(name);
-            document.getElementById("export-msg").textContent = "";
+            await fetchProjects();
+            populateSelect();
+            document.getElementById("action-msg").textContent = "";
+            showTab("editor");
+            location.hash = "editor/" + encodeURIComponent(name);
             await loadProject();
         }
 
@@ -394,13 +793,55 @@
             }
         }
 
+        async function approveAll() {
+            const pending = allUnits.filter(u => u.status !== "approved").length;
+            if (pending === 0) {
+                alert("No hay unidades pendientes.");
+                return;
+            }
+
+            // Las ediciones sin guardar de este proyecto también se aplican
+            const prefix = `${currentProject}:`;
+            const overrides = {};
+            for (const key of Object.keys(drafts)) {
+                if (key.startsWith(prefix)) overrides[key.slice(prefix.length)] = drafts[key];
+            }
+
+            const sure = confirm(
+                `Vas a aprobar ${pending} unidades pendientes sin revisarlas una por una.\n\n` +
+                `Se guardarán como aprobadas tal como están, incluidas las ediciones sin guardar de este proyecto.\n\n` +
+                `¿Estás seguro?`
+            );
+            if (!sure) return;
+
+            const res = await fetch(
+                `${API}/projects/${encodeURIComponent(currentProject)}/approve-all`,
+                {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ overrides }),
+                }
+            );
+            if (!res.ok) {
+                alert("No se pudo aprobar.");
+                return;
+            }
+            const data = await res.json();
+            allUnits = data.units;
+            for (const key of Object.keys(drafts)) {
+                if (key.startsWith(prefix)) delete drafts[key];
+            }
+            renderUnits();
+            document.getElementById("action-msg").textContent = `${data.approved} unidades aprobadas`;
+        }
+
         async function doExport() {
             const res = await fetch(
                 `${API}/projects/${encodeURIComponent(currentProject)}/export`,
                 { method: "POST" }
             );
             const data = await res.json();
-            document.getElementById("export-msg").textContent = `Exportado a: ${data.output_path}`;
+            document.getElementById("action-msg").textContent = `Exportado a: ${data.output_path}`;
         }
 
         function escapeHtml(text) {
@@ -409,7 +850,26 @@
             return div.innerHTML;
         }
 
-        loadProjects();
+        /* ---------------- Arranque ---------------- */
+
+        async function init() {
+            fillLanguages();
+            await loadFormats();
+            await refreshHome();
+
+            // #editor/nombre vuelve directo a ese proyecto; cualquier otra cosa abre el inicio
+            const hash = decodeURIComponent(location.hash.slice(1));
+            if (hash.startsWith("editor/")) {
+                const name = hash.slice("editor/".length);
+                if (projectsCache.some(p => p.name === name)) {
+                    await openEditor(name);
+                    return;
+                }
+            }
+            showTab("home");
+        }
+
+        init();
     </script>
 </body>
 
