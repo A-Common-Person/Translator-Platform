@@ -78,18 +78,19 @@ Si pasas solo un nombre de archivo, cada script lo busca o lo guarda en la carpe
 python translate.py <archivo_entrada> <proyecto.json> <idioma_origen> <idioma_destino>
 
 # Ejemplo: de inglés a español (lee samples/sample.epub, guarda projects/proyecto.json)
+# El nombre del .json es el nombre con el que el proyecto aparece en el editor
 python translate.py sample.epub proyecto.json en es
 ```
 
 ### 2. Revisar
 
-Con el editor web (recomendado). El editor abre el proyecto `projects/proyecto.json`:
+Con el editor web (recomendado). El editor lista todos los proyectos de `projects/` y puedes elegir cuál abrir:
 
 ```powershell
 uvicorn api.main:app
 ```
 
-Después abre `editor-web/index.html` en tu navegador (doble clic o `start editor-web\index.html`). Desde ahí puedes corregir y aprobar unidades, filtrar las pendientes y exportar el archivo final a `output/exported.epub`. Una corrección solo se guarda al pulsar **Aprobar**.
+Después abre `editor-web/index.html` en tu navegador (doble clic o `start editor-web\index.html`). Desde ahí puedes cambiar de proyecto, corregir y aprobar unidades, filtrar las pendientes y exportar el archivo final a `output/<proyecto>_translated.<extensión>`. Una corrección solo se guarda al aprobarla: pulsa **Aprobar** o **Enter** dentro del cuadro de traducción (aprueba y pasa a la siguiente unidad; **Shift + Enter** inserta un salto de línea).
 
 > Para desarrollar con reinicio automático puedes usar `--reload`, pero conviene limitarlo a tus carpetas de código para que no vigile `venv/`:
 > `uvicorn api.main:app --reload --reload-dir api --reload-dir core --reload-dir parsers --reload-dir providers`
@@ -120,6 +121,7 @@ Translator-Platform/
 ├── translate.py       # etapa 1: traducir
 ├── review.py          # etapa 2: revisar (terminal)
 ├── export_project.py  # etapa 3: exportar
+├── clean_project.py   # limpia saltos de línea de un proyecto ya creado
 └── main.py            # flujo directo de una sola pasada (demo)
 ```
 
@@ -132,8 +134,8 @@ Estas carpetas se generan en tu máquina y **no se suben al repositorio**:
 ## Limitaciones conocidas
 
 - **EPUB**: la tabla de contenidos no se reconstruye al exportar (workaround temporal por un error de `ebooklib`). Solo se traducen párrafos y encabezados (`<p>`, `<h1>`–`<h3>`); el formato en línea dentro de un párrafo (por ejemplo, una palabra en cursiva) se pierde, y el texto que está en otras etiquetas (como el aviso legal de Project Gutenberg, que vive en un `<footer>`) se deja tal cual venía en el original.
-- El editor trabaja por ahora con un único proyecto fijo (`projects/proyecto.json`).
-- Si editas una traducción en el editor y recargas la página antes de aprobarla, el cambio se pierde.
+- Si abres `index.html` con la extensión Live Server de VS Code, la página se recarga al exportar (porque se crea un archivo nuevo). El editor recuerda el proyecto activo, pero el mensaje de exportación se pierde; abre el archivo con doble clic o agrega `output/**`, `projects/**` y `data/**` a `liveServer.settings.ignoreFiles`.
+- Las ediciones sin aprobar se conservan mientras la página siga abierta, pero se pierden si la recargas (`F5`) o la cierras.
 - La memoria de traducción guarda las traducciones automáticas al generarlas; a futuro solo guardará las aprobadas.
 
 ## Hoja de ruta
@@ -144,7 +146,8 @@ Estas carpetas se generan en tu máquina y **no se suben al repositorio**:
 - [x] Flujo traducir → revisar → exportar
 - [x] Editor web básico (progreso, filtro de pendientes, exportar desde la página)
 - [x] Carpetas de trabajo separadas (`samples/`, `output/`, `projects/`, `data/`)
-- [ ] Mejoras del editor (selección de proyecto, pulido de interfaz)
+- [x] Selector de proyectos en el editor
+- [x] Pulido de la interfaz del editor (dos columnas, borradores, Enter para aprobar)
 - [ ] Parsers de diálogos de videojuegos (JSON, CSV, XLIFF, Ren'Py)
 - [ ] Soporte de RPG Maker (`.rvdata2`)
 - [ ] OCR, detección de bocadillos y edición sobre imagen para manga/manhwa
