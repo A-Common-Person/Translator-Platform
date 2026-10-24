@@ -3,82 +3,207 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Editor de traducción</title>
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: sans-serif;
-            max-width: 900px;
-            margin: 40px auto;
-            padding: 0 20px;
-            background: #fafafa;
+            font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 24px 24px 80px;
+            background: #f4f5f7;
+            color: #222;
         }
 
         h1 {
-            font-size: 20px;
+            font-size: 22px;
+            margin: 0 0 16px;
         }
 
+        /* Barra superior fija */
         .toolbar {
+            position: sticky;
+            top: 0;
+            z-index: 10;
             display: flex;
             align-items: center;
-            gap: 16px;
-            margin-bottom: 16px;
-            padding: 12px;
+            flex-wrap: wrap;
+            gap: 12px 20px;
+            margin-bottom: 24px;
+            padding: 14px 16px;
             background: white;
-            border-radius: 8px;
-            border: 1px solid #ddd;
+            border-radius: 10px;
+            border: 1px solid #dcdfe4;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .progress-wrap {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            min-width: 180px;
         }
 
         .progress {
-            font-size: 14px;
+            font-size: 13px;
             color: #444;
         }
 
-        .unit {
-            background: white;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            padding: 16px;
-            margin-bottom: 12px;
-        }
-
-        .unit.approved {
-            border-left: 4px solid #4caf50;
-        }
-
-        .source {
-            color: #666;
-            font-size: 14px;
-            margin-bottom: 8px;
-        }
-
-        textarea {
+        progress {
             width: 100%;
-            box-sizing: border-box;
-            font-size: 15px;
-            padding: 8px;
-            border-radius: 4px;
-            border: 1px solid #ccc;
-            min-height: 50px;
-        }
-
-        button {
-            padding: 6px 14px;
-            cursor: pointer;
-        }
-
-        .status {
-            font-size: 12px;
-            color: #999;
-            margin-left: 8px;
-        }
-
-        #export-msg {
-            font-size: 13px;
-            color: #4caf50;
+            height: 8px;
+            accent-color: #4caf50;
         }
 
         label {
             font-size: 14px;
+        }
+
+        select {
+            font-size: 14px;
+            padding: 4px 8px;
+        }
+
+        #export-msg {
+            font-size: 13px;
+            color: #2e7d32;
+        }
+
+        /* Cada unidad */
+        .unit {
+            background: white;
+            border: 1px solid #dcdfe4;
+            border-left: 4px solid #cfd3da;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .unit.approved {
+            border-left-color: #4caf50;
+        }
+
+        .unit.dirty {
+            border-left-color: #f5a623;
+        }
+
+        .unit-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 14px;
+            font-size: 13px;
+            color: #777;
+        }
+
+        .badge {
+            padding: 2px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            background: #eceef1;
+            color: #555;
+        }
+
+        .badge.approved {
+            background: #e3f4e4;
+            color: #2e7d32;
+        }
+
+        .badge.machine_translated {
+            background: #e8f0fe;
+            color: #1a56c4;
+        }
+
+        .dirty-flag {
+            color: #b36b00;
+            font-size: 12px;
+        }
+
+        .unit-body {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .field-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: #888;
+            margin-bottom: 6px;
+        }
+
+        .source {
+            background: #f6f7f9;
+            border-radius: 8px;
+            padding: 12px 14px;
+            font-size: 15px;
+            line-height: 1.6;
+            color: #444;
+            white-space: pre-wrap;
+        }
+
+        textarea {
+            display: block;
+            width: 100%;
+            min-height: 96px;
+            padding: 12px 14px;
+            font-family: inherit;
+            font-size: 15px;
+            line-height: 1.6;
+            border: 1px solid #c8ccd2;
+            border-radius: 8px;
+            resize: vertical;
+            field-sizing: content;
+        }
+
+        textarea:focus {
+            outline: 2px solid #8ab4f8;
+            border-color: #8ab4f8;
+        }
+
+        .unit-actions {
+            margin-top: 14px;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        button {
+            padding: 8px 16px;
+            font-size: 14px;
+            border-radius: 6px;
+            border: 1px solid #b8bdc5;
+            background: white;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #f0f2f4;
+        }
+
+        button.primary {
+            background: #2e7d32;
+            border-color: #2e7d32;
+            color: white;
+        }
+
+        button.primary:hover {
+            background: #276a2b;
+        }
+
+        .hint {
+            font-size: 12px;
+            color: #888;
+        }
+
+        @media (max-width: 800px) {
+            .unit-body {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -87,20 +212,80 @@
     <h1>Editor de traducción</h1>
 
     <div class="toolbar">
-        <span class="progress" id="progress">Cargando...</span>
+        <label>Proyecto:
+            <select id="project-select" onchange="selectProject(this.value)"></select>
+        </label>
+        <div class="progress-wrap">
+            <span class="progress" id="progress">Cargando...</span>
+            <progress id="bar" value="0" max="1"></progress>
+        </div>
         <label><input type="checkbox" id="only-pending" onchange="renderUnits()"> Mostrar solo pendientes</label>
-        <button onclick="doExport()">Exportar archivo final</button>
+        <button class="primary" onclick="doExport()">Exportar archivo final</button>
         <span id="export-msg"></span>
+        <span class="hint">Enter: aprobar y pasar a la siguiente · Shift+Enter: salto de línea</span>
     </div>
 
     <div id="units"></div>
 
     <script>
         const API = "http://127.0.0.1:8000";
+        const STATUS_LABELS = {
+            pending: "Pendiente",
+            machine_translated: "Traducción automática",
+            reviewed: "Revisado",
+            approved: "Aprobado",
+        };
+
         let allUnits = [];
+        let currentProject = null;
+        const drafts = {}; // ediciones sin aprobar, por proyecto y unidad
+
+        function draftKey(unitId) {
+            return `${currentProject}:${unitId}`;
+        }
+
+        async function loadProjects() {
+            const select = document.getElementById("project-select");
+            let projects;
+            try {
+                const res = await fetch(`${API}/projects`);
+                projects = await res.json();
+            } catch (e) {
+                document.getElementById("progress").textContent =
+                    "No se pudo conectar con el servidor. ¿Está encendido uvicorn?";
+                return;
+            }
+
+            select.innerHTML = "";
+            if (projects.length === 0) {
+                document.getElementById("progress").textContent =
+                    "No hay proyectos. Crea uno con translate.py";
+                return;
+            }
+
+            projects.forEach(p => {
+                const option = document.createElement("option");
+                option.value = p.name;
+                option.textContent = p.name;
+                select.appendChild(option);
+            });
+
+            // Si la URL trae #nombre, vuelve a ese proyecto; si no, abre el primero
+            const wanted = decodeURIComponent(location.hash.slice(1));
+            currentProject = projects.some(p => p.name === wanted) ? wanted : projects[0].name;
+            select.value = currentProject;
+            await loadProject();
+        }
+
+        async function selectProject(name) {
+            currentProject = name;
+            location.hash = encodeURIComponent(name);
+            document.getElementById("export-msg").textContent = "";
+            await loadProject();
+        }
 
         async function loadProject() {
-            const res = await fetch(`${API}/project`);
+            const res = await fetch(`${API}/projects/${encodeURIComponent(currentProject)}`);
             const project = await res.json();
             allUnits = project.units;
             renderUnits();
@@ -111,44 +296,109 @@
             const approvedCount = allUnits.filter(u => u.status === "approved").length;
             document.getElementById("progress").textContent =
                 `${approvedCount} / ${allUnits.length} unidades aprobadas`;
-
-            const unitsToShow = onlyPending
-                ? allUnits.filter(u => u.status !== "approved")
-                : allUnits;
+            const bar = document.getElementById("bar");
+            bar.max = Math.max(allUnits.length, 1);
+            bar.value = approvedCount;
 
             const container = document.getElementById("units");
             container.innerHTML = "";
-            unitsToShow.forEach(unit => {
+
+            allUnits.forEach((unit, i) => {
+                if (onlyPending && unit.status === "approved") return;
+
+                const key = draftKey(unit.id);
+                const hasDraft = key in drafts;
+                const text = hasDraft ? drafts[key] : (unit.translated_text || "");
+                const isApproved = unit.status === "approved";
+
                 const div = document.createElement("div");
-                div.className = "unit" + (unit.status === "approved" ? " approved" : "");
+                div.className = "unit" + (isApproved ? " approved" : "") + (hasDraft ? " dirty" : "");
+                div.id = `card-${unit.id}`;
                 div.innerHTML = `
-          <div class="source">${escapeHtml(unit.source_text)}</div>
-          <textarea id="text-${unit.id}">${escapeHtml(unit.translated_text || "")}</textarea>
-          <br>
-          <button onclick="approve('${unit.id}')">Aprobar</button>
-          <span class="status">${unit.status}</span>
-        `;
+                    <div class="unit-header">
+                        <strong>#${i + 1}</strong>
+                        <span class="badge ${unit.status}">${STATUS_LABELS[unit.status] || unit.status}</span>
+                        <span class="dirty-flag" id="dirty-${unit.id}" ${hasDraft ? "" : "hidden"}>● Cambios sin guardar</span>
+                    </div>
+                    <div class="unit-body">
+                        <div>
+                            <div class="field-label">Original</div>
+                            <div class="source">${escapeHtml(unit.source_text)}</div>
+                        </div>
+                        <div>
+                            <div class="field-label">Traducción</div>
+                            <textarea id="text-${unit.id}" oninput="onEdit('${unit.id}', this.value)" onkeydown="onKey(event, '${unit.id}')">${escapeHtml(text)}</textarea>
+                        </div>
+                    </div>
+                    <div class="unit-actions">
+                        <button class="primary" onclick="approve('${unit.id}')">${isApproved ? "Guardar cambios" : "Aprobar"}</button>
+                    </div>
+                `;
                 container.appendChild(div);
             });
         }
 
-        async function approve(unitId) {
+        function onEdit(unitId, value) {
+            drafts[draftKey(unitId)] = value;
+            document.getElementById(`card-${unitId}`).classList.add("dirty");
+            document.getElementById(`dirty-${unitId}`).hidden = false;
+        }
+
+        function nextUnitId(unitId) {
+            const onlyPending = document.getElementById("only-pending").checked;
+            const start = allUnits.findIndex(u => u.id === unitId);
+            for (let i = start + 1; i < allUnits.length; i++) {
+                if (!onlyPending || allUnits[i].status !== "approved") return allUnits[i].id;
+            }
+            return null;
+        }
+
+        function onKey(event, unitId) {
+            // Enter aprueba; Shift+Enter inserta un salto de línea
+            if (event.key === "Enter" && !event.shiftKey && !event.isComposing) {
+                event.preventDefault();
+                approve(unitId, true);
+            }
+        }
+
+        async function approve(unitId, goNext = false) {
+            const nextId = goNext ? nextUnitId(unitId) : null;
             const text = document.getElementById(`text-${unitId}`).value;
-            const res = await fetch(`${API}/units/${unitId}`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ translated_text: text }),
-            });
+            const res = await fetch(
+                `${API}/projects/${encodeURIComponent(currentProject)}/units/${unitId}`,
+                {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ translated_text: text }),
+                }
+            );
+            if (!res.ok) {
+                alert("No se pudo guardar la unidad.");
+                return;
+            }
             const updated = await res.json();
+
+            delete drafts[draftKey(unitId)];
 
             // Actualiza solo esta unidad en memoria, sin recargar todo el proyecto
             const index = allUnits.findIndex(u => u.id === unitId);
             allUnits[index] = updated;
             renderUnits();
+
+            if (nextId) {
+                const next = document.getElementById(`text-${nextId}`);
+                if (next) {
+                    next.focus();
+                    next.scrollIntoView({ block: "center" });
+                }
+            }
         }
 
         async function doExport() {
-            const res = await fetch(`${API}/export`, { method: "POST" });
+            const res = await fetch(
+                `${API}/projects/${encodeURIComponent(currentProject)}/export`,
+                { method: "POST" }
+            );
             const data = await res.json();
             document.getElementById("export-msg").textContent = `Exportado a: ${data.output_path}`;
         }
@@ -159,7 +409,7 @@
             return div.innerHTML;
         }
 
-        loadProject();
+        loadProjects();
     </script>
 </body>
 

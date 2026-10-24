@@ -20,7 +20,9 @@ class EpubParser(ContentParser):
             paragraphs = soup.find_all(["p", "h1", "h2", "h3"])
 
             for p_index, tag in enumerate(paragraphs):
-                text = tag.get_text().strip()
+                # Dentro de un párrafo de EPUB, los saltos de línea son solo formato del archivo:
+                # se juntan en un único espacio para que el texto quede continuo.
+                text = " ".join(tag.get_text().split())
                 if not text:
                     continue
                 units.append(
@@ -58,5 +60,5 @@ class EpubParser(ContentParser):
 
             item.set_content(str(soup).encode("utf-8"))
 
-        book.toc = []
+        book.toc = []  # evita el error de NCX; reconstruir la tabla de contenidos queda pendiente
         epub.write_epub(output_path, book)
